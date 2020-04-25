@@ -80,7 +80,10 @@ format_numeric_column <- function(col, nsmall = NULL) {
     return(st)
   }
   
-  col %>% 
+  # Initialize the vector of formated numbers as a character vector
+  col_formated <- character(length=length(col))
+  # Format all numbers that are not NAs (NAs are simply left as empty characters)
+  col_formated[!is.na(col)] <- col[!is.na(col)] %>% 
     # round all numbers in the array
     round(digits = nsmall) %>% 
     # format the numbers such that they have 'nsmall' decimals,
@@ -91,4 +94,6 @@ format_numeric_column <- function(col, nsmall = NULL) {
     # this step is necessary since Latex does not recognize the
     # leading white spaces as white spaces
     sapply(FUN = add_phantom, USE.NAMES = FALSE)
+  
+  return(col_formated)
 }
