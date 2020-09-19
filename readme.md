@@ -26,6 +26,7 @@ The following options are available:
 * `row_names`: character array of row-names (default `NULL`)
 * `italic_rows`: boolean array indicating which rows should be exported italic faced (default `NULL`)
 * `bold_rows`: boolean array indicating which rows should be exported bold faced (default `NULL`)
+* `extra_space`: character array of length 1 or `nrow(data)` that is added after the LaTeX's new-line command (default `NULL`)
 
 Note that, when round precision is an integer number, all numbers are exported with the same decimal precision, e.g.
 "5" if exported as "5.00" if `round_precison=2L`.
