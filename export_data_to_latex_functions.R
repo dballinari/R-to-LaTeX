@@ -15,13 +15,17 @@ export_data_to_latex <- function(data, path, round_precison = NULL, row_names = 
   require(dplyr)
   require(tibble)
   # Make checks of the inputs:
-  if (!is.integer(round_precison) & !is.null(round_precison)) stop("'round_precison' must be an integer or NULL")
   if (!is.null(row_names) & length(row_names) != nrow(data)) stop("'row_names' must have the same length as the number of rows in 'data'")
   if (!is.null(italic_rows) & !is.logical(italic_rows) ) stop("'italic_rows' must either be NULL or a logical vector")
   if (!is.null(italic_rows) & length(italic_rows) != nrow(data)) stop("'italic_rows' must have the same length as the number of rows in 'data'")
   if (!is.null(bold_rows) & !is.logical(bold_rows) ) stop("'bold_rows' must either be NULL or a logical vector")
   if (!is.null(bold_rows) & length(bold_rows) != nrow(data)) stop("'bold_rows' must have the same length as the number of rows in 'data'")
   if (!is.null(extra_space) & length(extra_space) > 1 & length(extra_space) != nrow(data)) stop("'extra_space' must be a string of length 1 or 'nrow(data)'")
+  # Ensure that round precision is an integer
+  if (!is.null(round_precison)) {
+    round_precison <- as.integer(round_precison)
+  }
+  
   
   if (is.null(extra_space)) {
     new_line_str <- "\\\\"
@@ -68,10 +72,6 @@ format_numeric_column <- function(col, nsmall = NULL, ...) {
   require(magrittr)
   # If the rounding argument is NULL, the column is returned in its current state
   if (is.null(nsmall)) return(col)
-  # Help function that returns the length of a numbers integer
-  get_integer_size <- function(n) {
-    return(nchar(as.character(floor(abs(n)))))
-  }
   # A help function that formats the numbers in a vector such that the decimal points are aligned
   add_phantom <- function(x, nsmall, neg, max_int, ...) {
     # check how long is the integer part of the number
@@ -118,33 +118,28 @@ format_numeric_column <- function(col, nsmall = NULL, ...) {
 }
 
 
-estimated_coef <- tibble(a = c(1.367, 0.109, -3.4), b = c(22.113, -12.4, 5.34))
-standard_errors <- tibble(a = c(2.786, 0.542, -1.25), b = c(8.6523, -8.745, 2.94))
-pvalues <- tibble(a = c(0.6237, 0.8406, 0.00653), b = c(0.0106, 0.1562, 0.06932))
-export_coef_to_latex("../../Paper/Tables/Data/TEST.tex", data_coef = estimated_coef, data_info = standard_errors, data_sig = pvalues)
-
 #' Function that exports estimated coefficients to LaTeX and adds additional information (e.g. standard errors or t-statistics) in parentheses 
 #' below the respective coefficient. Significant coefficients are marked by alphabetic superscripts.
 #'
 #' @param path path and name of the exported file (must end with '.tex')
 #' @param data_coef data frame or matrix containing the coefficients
-#' @param data_info data frame or matrix containing the additional information (e.g. standard errors or t-statistics), must have the same 
-#' dimensions as `data_coef`
+#' @param data_info data frame or matrix containing the additional information (e.g. standard errors or t-statistics), must have the same dimensions as `data_coef`
 #' @param data_sig data frame or matrix containing the p-values, must have the same dimensions as `data_coef`
 #' @param sig_levels levels at which significance is reported, default is 0.01, 0.05, and 0.1
 #' @param round_precison integer defining the how many decimals are exported 
-#' @param row_names optional character vector of rownames, must have the same length as the number of rows in `data_coef`
+#' @param row_names optional character vector of row-names, must have the same length as the number of rows in `data_coef`
 #'
-export_coef_to_latex <- function(path, data_coef, data_info, data_sig, sig_levels = c(0.01, 0.05, 0.1), round_precison = 2L, row_names = NULL) {
+export_coef_to_latex <- function(path, data_coef, data_info, data_sig, sig_levels = c(0.01, 0.05, 0.1), round_precison = NULL, row_names = NULL) {
   require(dplyr)
   require(tibble)
-  # help function that returns the length of a numbers integer
-  get_integer_size <- function(n) {
-    return(nchar(as.character(floor(abs(n)))))
-  }
-
   # ensure that rounding number is integer
-  round_precison <- as.integer(round_precison)
+  if (!is.null(round_precison)) {
+    round_precison <- as.integer(round_precison)
+  } else {
+    round_precison <- 2L
+  }
+  # check that the significance levels are a numeric vector
+  if (!is.numeric(sig_levels)) stop("'sig_levels' must be a numeric vector!")
   # ensure that the levels are in the right order
   sig_levels <- sort(sig_levels)
   # define the symbols for significance
@@ -246,4 +241,15 @@ export_coef_to_latex <- function(path, data_coef, data_info, data_sig, sig_level
     add_column( last_col = "\\\\") %>%
     # export file:
     write.table(file = path ,sep=" ", row.names=FALSE, col.names = FALSE, quote=FALSE)
+}
+
+
+#' Help function that returns the length of the integer part of a number
+#'
+#' @param n a double
+#'
+#' @return length of the integer part of the number
+#' 
+get_integer_size <- function(n) {
+  return(nchar(as.character(floor(abs(n)))))
 }
