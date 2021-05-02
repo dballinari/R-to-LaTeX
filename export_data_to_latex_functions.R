@@ -64,7 +64,7 @@ export_data_to_latex <- function(data, path, round_precison = NULL, row_names = 
 #'
 #' @return the formatted column, i.e. when nsmall is not NULL, a character vector
 #'
-format_numeric_column <- function(col, nsmall = NULL) {
+format_numeric_column <- function(col, nsmall = NULL, ...) {
   require(magrittr)
   # If the rounding argument is NULL, the column is returned in its current state
   if (is.null(nsmall)) return(col)
@@ -94,7 +94,7 @@ format_numeric_column <- function(col, nsmall = NULL) {
     # format the numbers such that they have 'nsmall' decimals,
     # note that this returns a character vector with leading white 
     # spaces to ensure that all entries have the same length
-    format(nsmall= nsmall) %>% 
+    format(nsmall= nsmall, ...) %>% 
     # replace the leading white spaces with phantom characters,
     # this step is necessary since Latex does not recognize the
     # leading white spaces as white spaces
