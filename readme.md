@@ -1,8 +1,17 @@
 # Export data to LaTeX
+## Description
+This repository provides two main functions that help exporting data from R to LaTeX. 
+The function `export_data_to_latex` simply exports a data frame to LaTeX, and formats 
+the numeric columns such that the numbers are aligned by the decimal point. 
+The function `export_coef_to_latex` exports estimated coefficient by reporting additional 
+information in parentheses below the respective estimate and marking significant results 
+by alphabetic superscripts. All numbers in the exported coefficient table are again 
+aligned at the decimal point.
+
 ## Requirments
 The packages required for these functions are `dplyr`, `tibble`, `purrr`, `stringr`, `magrittr`.
 
-## Usage
+## Usage `export_data_to_latex`
 Given a data frame (ideally a `tibble`-object), the function exports the data to a tex file data can be included in a 
 LaTeX table environment.   
 ```R
@@ -12,9 +21,9 @@ data %>% export_data_to_latex(path="data_for_latex.tex")
 The exported data can then be included in LaTeX table environment:
 ```latex
 \begin{table}
-    \begin{tabular}
+    \begin{tabular}{cc}
         a & b \\
-        \cline
+        \hline
         \input{"data_for_latex.tex"}
     \end{tabular}
 \end{table}
