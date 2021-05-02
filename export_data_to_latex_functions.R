@@ -56,49 +56,63 @@ export_data_to_latex <- function(data, path, round_precison = NULL, row_names = 
 
 
 #' Function that formats a numeric column for the export to latex. Besides rounding the 
-#' numbers and converting them to characters, the function adds phantome spaces such that
+#' numbers and converting them to characters, the function adds phantom spaces such that
 #' the numbers are aligned when displayed in Latex, besides possible "-" signs
 #'
 #' @param col a numeric vector
 #' @param nsmall the number of decimals to be exported or NULL (the default)
 #'
-#' @return the formatted column, i.e. when nsmall is not NULL, a character vector
+#' @return the formatted column, i.e. when 'nsmall' is not NULL, a character vector
 #'
 format_numeric_column <- function(col, nsmall = NULL, ...) {
   require(magrittr)
   # If the rounding argument is NULL, the column is returned in its current state
   if (is.null(nsmall)) return(col)
-  # A help function that replaces leading white spaces with phantom characters
-  add_phantom <- function(st) {
-    # Get leading white spaces
-    leading_white <- stringr::str_extract(st, pattern = "^\\s+")
-    # If there are leading white spaces, add phantom charcters
-    if (!is.na(leading_white)) {
-      # Replace leading white spaces with latex's phantom characters
-      st <- stringr::str_replace(st, 
-                        pattern = "^\\s+", 
-                        replacement= paste0("\\\\leavevmode\\\\phantom{",
-                                            paste(rep("0", nchar(leading_white)), 
-                                                  collapse = ""), 
-                                            "}"))
+  # Help function that returns the length of a numbers integer
+  get_integer_size <- function(n) {
+    return(nchar(as.character(floor(abs(n)))))
+  }
+  # A help function that formats the numbers in a vector such that the decimal points are aligned
+  add_phantom <- function(x, nsmall, neg, max_int, ...) {
+    # check how long is the integer part of the number
+    size_int <- get_integer_size(x)
+    # check if the number is negative, i.e. has a minus sign
+    is_neg <- x<0
+    # format the number such that it has exactly 'nsmall' decimal numbers
+    st <- format(round(x, digits = nsmall), nsmall=nsmall, ...)
+    # put the number is math-mode
+    st <- paste0("$", st,"$")
+    # if the length of the number is the same as the maximal length of a number in the vector,
+    # and if the number is either negative or if there are no negative numbers in the vector, 
+    # we are done and can return the formatted number
+    if (is_neg==neg & size_int == max_int) {
+      return(st)
+    } 
+    # otherwise we have to add some phantom characters
+    phantom_string <- ""
+    # add phantom leading zeros such that the number length matches that of the longest number
+    if (size_int < max_int) {
+      phantom_string <- paste0(paste(rep("0", max_int-size_int), collapse = ""), phantom_string)
     }
+    # add phantom minus sign if any number is negative in the vector
+    if (is_neg!=neg) {
+      phantom_string <- paste0("$-$", phantom_string)
+    }
+    st <- paste0("\\leavevmode\\phantom{", phantom_string, "}", st)
     return(st)
   }
+  # check if there are any negative numbers
+  neg_numbers <- any(col<0)
+  # check max size of numbers (without decimals)
+  max_int <- max(sapply(col, get_integer_size))
   
-  # Initialize the vector of formated numbers as a character vector
+  # Initialize the vector of formatted numbers as a character vector
   col_formated <- character(length=length(col))
   # Format all numbers that are not NAs (NAs are simply left as empty characters)
   col_formated[!is.na(col)] <- col[!is.na(col)] %>% 
-    # round all numbers in the array
-    round(digits = nsmall) %>% 
-    # format the numbers such that they have 'nsmall' decimals,
-    # note that this returns a character vector with leading white 
-    # spaces to ensure that all entries have the same length
-    format(nsmall= nsmall, ...) %>% 
-    # replace the leading white spaces with phantom characters,
-    # this step is necessary since Latex does not recognize the
-    # leading white spaces as white spaces
-    sapply(FUN = add_phantom, USE.NAMES = FALSE)
+    # format the numbers and add phantom characters such that all the decimal points are 
+    # aligned
+    sapply(FUN = function(x) add_phantom(x, nsmall, neg_numbers, max_int, ...), USE.NAMES = FALSE)
   
   return(col_formated)
 }
