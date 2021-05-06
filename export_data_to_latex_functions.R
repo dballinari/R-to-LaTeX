@@ -38,7 +38,7 @@ export_data_to_latex <- function(data, path, round_precison = NULL, row_names = 
     as_tibble() %>%
     # Round numeric columns:
     mutate_if(is.numeric, ~format_numeric_column(., nsmall = round_precison)) %>%
-    # Add math enviroment for numeric coulmns (note that this columns are then characters, and no longer numeric)
+    # Add math environment for numeric columns (note that this columns are then characters, and no longer numeric)
     mutate_if(is.numeric, ~paste0("$", ., "$") ) %>% 
     # Add escapes to latex symbols
     mutate_all(~stringr::str_replace_all(string = ., pattern = "([%&]{1})", replacement = "\\\\\\1")) %>%
@@ -48,9 +48,9 @@ export_data_to_latex <- function(data, path, round_precison = NULL, row_names = 
     {if (!is.null(italic_rows)) mutate_all(., ~ifelse(italic_rows, paste0("\\textit{",.,"}"), .)) else . } %>%
     # Make specific rows bold:
     {if (!is.null(bold_rows)) mutate_all(., ~ifelse(bold_rows, paste0("\\textit{",.,"}"), .)) else . } %>%
-    # Put data into a list, togheter with a column count (we will use this to add the column separators as defined by latex)
+    # Put data into a list, together with a column count (we will use this to add the column separators as defined by latex)
     {append(list(.), 2:ncol(.))} %>% 
-    # Between each coulmn, add the separator symbol '&'
+    # Between each column, add the separator symbol '&'
     purrr::reduce(.f = function(x,y) add_column(x, tmp = rep("&", nrow(x)), .before = 2*y -2 ) %>% rename(!!as.character(y) := "tmp")) %>%
     # Add "new row" Latex-Symbol
     add_column( last_col = new_line_str) %>%
@@ -232,15 +232,9 @@ export_coef_to_latex <- function(path, data_coef, data_info, data_sig, sig_level
     arrange(id, match(what, c("coef", "info"))) %>% 
     # remove identifiers
     select(-id, -what) %>% 
-    # if specified, add row names:
-    {if (!is.null(row_names)) add_column(., rownames = as.character(row_names), .before = 1) else .} %>%
-    {append(list(.), 2:ncol(.))} %>% 
-    # between each column, add the separator symbol '&'
-    purrr::reduce(.f = function(x,y) add_column(x, tmp = rep("&", nrow(x)), .before = 2*y -2 ) %>% rename(!!as.character(y) := "tmp")) %>%
-    # add "new row" Latex-Symbol
-    add_column( last_col = "\\\\") %>%
-    # export file:
-    write.table(file = path ,sep=" ", row.names=FALSE, col.names = FALSE, quote=FALSE)
+    export_data_to_latex(data = ., path=path, round_precison=NULL, 
+                         row_names = row_names, italic_rows = NULL, 
+                         bold_rows = NULL, extra_space = NULL)
 }
 
 
